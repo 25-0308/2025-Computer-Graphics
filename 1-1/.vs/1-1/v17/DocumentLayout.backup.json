@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\00rhk\\Desktop\\2025-Computer-Graphics\\1-1\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{885DAF35-0362-48D1-8E0A-F44BD829EBB6}|1-1\\1-1.vcxproj|C:\\Users\\00rhk\\Desktop\\2025-Computer-Graphics\\1-1\\1-1\\FileName.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{885DAF35-0362-48D1-8E0A-F44BD829EBB6}|1-1\\1-1.vcxproj|solutionrelative:1-1\\FileName.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "FileName.cpp",
+              "DocumentMoniker": "C:\\Users\\00rhk\\Desktop\\2025-Computer-Graphics\\1-1\\1-1\\FileName.cpp",
+              "RelativeDocumentMoniker": "1-1\\FileName.cpp",
+              "ToolTip": "C:\\Users\\00rhk\\Desktop\\2025-Computer-Graphics\\1-1\\1-1\\FileName.cpp",
+              "RelativeToolTip": "1-1\\FileName.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-16T04:52:11.172Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
