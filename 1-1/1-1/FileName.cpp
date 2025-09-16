@@ -5,7 +5,7 @@
 #include <random>
 
 std::mt19937 mtRand(static_cast<unsigned>(time(nullptr)));
-std::uniform_int_distribution<float> rgb(0.0f, 1.0f);
+std::uniform_real_distribution<float> rgb(0.0f, 1.0f);
 
 bool t_toggle = false;
 
@@ -80,10 +80,11 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 'w':
 		red = 1.0f, green = 1.0f, blue = 1.0f;
 		break;
-	case 'b':
+	case 'k':
 		red = 0.0f, green = 0.0f, blue = 0.0f;
 		break;
 	case 't':
+		if (!t_toggle)glutTimerFunc(100, TimerFunction, 0);
 		t_toggle = true;
 		break;
 	case 's':
