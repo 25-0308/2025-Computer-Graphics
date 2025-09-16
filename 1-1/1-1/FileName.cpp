@@ -2,11 +2,20 @@
 #include <gl/glew.h> //--- 필요한 헤더파일 include
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
+#include <random>
+
+std::mt19937 mtRand(static_cast<unsigned>(time(nullptr)));
+std::uniform_int_distribution<float> rgb(0.0f, 1.0f);
+
+bool t_toggle = false;
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
+GLvoid Keyboard(unsigned char key, int x, int y);
+GLvoid TimerFunction(int value);
+float red = 0.0f, green = 0.0f, blue = 1.0f;
 
-void main(int argc, char** argv)
+int main(int argc, char** argv)
 {
 	//--- 윈도우 출력하고 콜백함수 설정 { //--- 윈도우 생성하기
 	glutInit(&argc, argv); // glut 초기화
@@ -24,17 +33,65 @@ void main(int argc, char** argv)
 	else std::cout << "GLEW Initialized\n";
 	glutDisplayFunc(drawScene); // 출력 함수의 지정
 	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
+	glutKeyboardFunc(Keyboard); // 키보드 입력 함수 지정
+	glutTimerFunc(100, TimerFunction, 0); // 타이머 함수 지정
 	glutMainLoop(); // 이벤트 처리 시작
+}
+
+GLvoid TimerFunction(int value)
+{
+	glutPostRedisplay(); // 화면 갱신 요청
+	if (t_toggle) {
+		red = rgb(mtRand), green = rgb(mtRand), blue = rgb(mtRand);
+		glutTimerFunc(100, TimerFunction, 0); // 100밀리초 후에 다시 타이머 함수 호출
+	}
 }
 
 GLvoid drawScene() //--- 콜백 함수: 출력 콜백 함수 
 	{
-		glClearColor(0.0f, 0.0f, 1.0f, 1.0f); // 바탕색을 ‘blue’로 지정
+		glClearColor(red, green, blue, 1.0f); // 바탕색을 ‘blue’로 지정
 		glClear(GL_COLOR_BUFFER_BIT); // 설정된 색으로 전체를 칠하기
 		// 그리기 부분 구현: 그리기 관련 부분이 여기에 포함된다.
 		glutSwapBuffers(); // 화면에 출력하기
 	}
+
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수 
 	{
 		glViewport(0, 0, w, h);
 	}
+
+GLvoid Keyboard(unsigned char key, int x, int y)
+{
+	switch (key) {
+	case 'c':
+	{
+		red = 0.0f, green = 1.0f, blue = 1.0f;
+		break; //--- 배경색을 청록색으로 설정
+	}
+	case 'm':
+		red = 1.0f, green = 0.0f, blue = 1.0f;
+		break; //--- 배경색을 자홍색으로 설정
+	case 'y':
+		red = 1.0f, green = 1.0f, blue = 0.0f;
+		break; //--- 배경색을 노랑색으로 설정
+	case 'a':
+		red = rgb(mtRand), green = rgb(mtRand), blue = rgb(mtRand);
+		break;
+	case 'w':
+		red = 1.0f, green = 1.0f, blue = 1.0f;
+		break;
+	case 'b':
+		red = 0.0f, green = 0.0f, blue = 0.0f;
+		break;
+	case 't':
+		t_toggle = true;
+		break;
+	case 's':
+		t_toggle = false;
+		break;
+	case 'q':
+		glutLeaveMainLoop(); //--- 'q'키를 누르면 프로그램 종료
+		break;
+	}
+	glutPostRedisplay(); //--- 배경색이 바뀔 때마다 출력 콜백 함수를 호출하여 화면을 refresh 한다
+}
