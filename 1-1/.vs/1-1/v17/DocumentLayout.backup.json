@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\Admin\\Desktop\\2025-computer-graphics\\2025-Computer-Graphics\\1-1\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{885DAF35-0362-48D1-8E0A-F44BD829EBB6}|1-1\\1-1.vcxproj|C:\\Users\\Admin\\Desktop\\2025-computer-graphics\\2025-Computer-Graphics\\1-1\\1-1\\5.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{885DAF35-0362-48D1-8E0A-F44BD829EBB6}|1-1\\1-1.vcxproj|solutionrelative:1-1\\5.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{885DAF35-0362-48D1-8E0A-F44BD829EBB6}|1-1\\1-1.vcxproj|C:\\Users\\Admin\\Desktop\\2025-computer-graphics\\2025-Computer-Graphics\\1-1\\1-1\\4.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{885DAF35-0362-48D1-8E0A-F44BD829EBB6}|1-1\\1-1.vcxproj|solutionrelative:1-1\\4.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
@@ -27,19 +31,32 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "5.cpp",
+              "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\2025-computer-graphics\\2025-Computer-Graphics\\1-1\\1-1\\5.cpp",
+              "RelativeDocumentMoniker": "1-1\\5.cpp",
+              "ToolTip": "C:\\Users\\Admin\\Desktop\\2025-computer-graphics\\2025-Computer-Graphics\\1-1\\1-1\\5.cpp",
+              "RelativeToolTip": "1-1\\5.cpp",
+              "ViewState": "AgIAAJsAAAAAAAAAAADwv6oAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-29T19:04:21.902Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "4.cpp",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\2025-computer-graphics\\2025-Computer-Graphics\\1-1\\1-1\\4.cpp",
               "RelativeDocumentMoniker": "1-1\\4.cpp",
               "ToolTip": "C:\\Users\\Admin\\Desktop\\2025-computer-graphics\\2025-Computer-Graphics\\1-1\\1-1\\4.cpp",
               "RelativeToolTip": "1-1\\4.cpp",
-              "ViewState": "AgIAAHkAAAAAAAAAAAAAAIgAAAAaAAAAAAAAAA==",
+              "ViewState": "AgIAAF4AAAAAAAAAAADwv4gAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-09-29T15:22:16.803Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "3.cpp",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\2025-computer-graphics\\2025-Computer-Graphics\\1-1\\1-1\\3.cpp",
               "RelativeDocumentMoniker": "1-1\\3.cpp",
@@ -47,12 +64,11 @@
               "RelativeToolTip": "1-1\\3.cpp",
               "ViewState": "AgIAAGwAAAAAAAAAAADgv3oAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-29T13:17:39.139Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-29T13:17:39.139Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "FileName.cpp",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\2025-computer-graphics\\2025-Computer-Graphics\\1-1\\1-1\\FileName.cpp",
               "RelativeDocumentMoniker": "1-1\\FileName.cpp",
@@ -60,8 +76,7 @@
               "RelativeToolTip": "1-1\\FileName.cpp",
               "ViewState": "AgIAADQAAAAAAAAAAADwv1YAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-16T04:52:11.172Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-16T04:52:11.172Z"
             }
           ]
         }
