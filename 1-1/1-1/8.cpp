@@ -20,6 +20,47 @@ GLuint shaderProgramID; //--- 세이더 프로그램 이름
 GLuint vertexShader; //--- 버텍스 세이더 객체
 GLuint fragmentShader; //--- 프래그먼트 세이더 객체
 
+GLuint VAO, VBO_position, VBO_color;
+
+const float vertexPosition[] =
+{
+0.5, 1.0, 0.0,
+0.0, 0.0, 0.0,
+1.0, 0.0, 0.0
+};
+
+const float vertexColor[] =
+{
+1.0, 0.0, 0.0,
+0.0, 1.0, 0.0,
+0.0, 0.0, 1.0
+};
+
+void InitBuffer()
+{
+	//--- Vertex Array Object 생성
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO_position);
+
+	//--- 위치 속성
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPosition), vertexPosition, GL_STATIC_DRAW);
+	//--- 색상 속성
+	glGenBuffers(1, &VBO_color);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColor), vertexColor, GL_STATIC_DRAW);
+	//--- vPos 속성 변수에 값을 저장
+	GLint pAttribute = glGetAttribLocation(shaderProgramID, "vPos");
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
+	glVertexAttribPointer(pAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glEnableVertexAttribArray(pAttribute);
+	//--- vColor 속성 변수에 값을 저장
+	GLint cAttribute = glGetAttribLocation(shaderProgramID, "vColor");
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+	glVertexAttribPointer(cAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glEnableVertexAttribArray(cAttribute);
+}
+
 char* filetobuf(const char* file)
 {
 	FILE* fptr;
