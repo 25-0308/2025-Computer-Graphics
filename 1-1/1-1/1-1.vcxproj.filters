@@ -30,5 +30,16 @@
     <ClCompile Include="6.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="8.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vertex.glsl">
+      <Filter>소스 파일</Filter>
+    </None>
+    <None Include="fragment.glsl">
+      <Filter>소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>
