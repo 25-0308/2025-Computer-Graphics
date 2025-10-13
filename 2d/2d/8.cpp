@@ -1,0 +1,268 @@
+#define _CRT_SECURE_NO_WARNINGS //--- 프로그램 맨 앞에 선언할 것
+#include <stdlib.h>
+#include <stdio.h>
+#include <iostream>
+#include <random>
+#include <gl/glew.h>
+#include <gl/freeglut.h>
+#include <gl/freeglut_ext.h>
+#include <vector>
+
+std::mt19937 mtRand(static_cast<unsigned>(time(nullptr)));
+std::uniform_real_distribution<float> rgb(0.0f, 1.0f);
+
+using namespace std;
+//--- 아래 5개 함수는 사용자 정의 함수 임
+void make_vertexShaders();
+void make_fragmentShaders();
+GLuint make_shaderProgram();
+GLvoid drawScene();
+GLvoid Reshape(int w, int h);
+//추가 함수
+GLvoid keyboard(unsigned char key, int x, int y);
+GLvoid mouse(int button, int state, int x, int y);
+//--- 필요한 변수 선언
+GLint width, height;
+GLuint shaderProgramID; //--- 세이더 프로그램 이름
+GLuint vertexShader; //--- 버텍스 세이더 객체
+GLuint fragmentShader; //--- 프래그먼트 세이더 객체
+GLuint VAO;//VBO담는 용도
+GLuint VBO;//정점 데이터를 GPU에 넘겨줄 버퍼공간(포인터/암튼 주소 갖고있음) 
+
+enum Shapes { Point, Line, Tri, Rect };
+struct Shape {
+	Shapes type;
+	float x, y;//중심좌표
+	float size;//크기
+	float r, g, b;//색상
+};
+vector<Shape> shapes;
+int selected = -1;//도형 선택여부
+Shapes Mode = Point;//도형 종류
+
+char* filetobuf(const char* file)
+{
+	FILE* fptr;
+	long length;
+	char* buf;
+	fptr = fopen(file, "rb"); // Open file for reading
+	if (!fptr) // Return NULL on failure
+		return NULL;
+	fseek(fptr, 0, SEEK_END); // Seek to the end of the file
+	length = ftell(fptr); // Find out how many bytes into the file we are
+	buf = (char*)malloc(length + 1); // Allocate a buffer for the entire length of the file and a null terminator
+	fseek(fptr, 0, SEEK_SET); // Go back to the beginning of the file
+	fread(buf, length, 1, fptr); // Read the contents of the file in to the buffer
+	fclose(fptr); // Close the file
+	buf[length] = 0; // Null terminator
+	return buf; // Return the buffer
+}
+
+//--- 메인 함수
+void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
+{
+	width = 1000;
+	height = 1000;
+	//--- 윈도우 생성하기
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowPosition(100, 100);
+	glutInitWindowSize(width, height);
+	glutCreateWindow("Example1");
+	//--- GLEW 초기화하기
+	glewExperimental = GL_TRUE;
+	glewInit();
+	//--- 세이더 읽어와서 세이더 프로그램 만들기: 사용자 정의함수 호출
+	make_vertexShaders(); //--- 버텍스 세이더 만들기
+	make_fragmentShaders(); //--- 프래그먼트 세이더 만들기
+	shaderProgramID = make_shaderProgram();
+	//--- 세이더 프로그램 만들기
+	glutDisplayFunc(drawScene); //--- 출력 콜백 함수
+	glutReshapeFunc(Reshape);
+	glutKeyboardFunc(keyboard);
+	glutMouseFunc(mouse);
+	glutMainLoop();
+}
+
+//--- 버텍스 세이더 객체 만들기
+void make_vertexShaders()
+{
+	GLchar* vertexSource;
+	//--- 버텍스 세이더 읽어 저장하고 컴파일 하기
+	//--- filetobuf: 사용자정의 함수로 텍스트를 읽어서 문자열에 저장하는 함수
+	vertexSource = filetobuf("vertex.glsl");
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexSource, NULL);
+	glCompileShader(vertexShader);
+	GLint result;
+	GLchar errorLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &result);
+	if (!result)
+	{
+
+		glGetShaderInfoLog(vertexShader, 512, NULL, errorLog);
+
+		std::cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << std::endl;
+
+		return;
+	}
+}
+//--- 프래그먼트 세이더 객체 만들기
+void make_fragmentShaders()
+{
+	GLchar* fragmentSource;
+	//--- 프래그먼트 세이더 읽어 저장하고 컴파일하기
+	fragmentSource = filetobuf("fragment.glsl"); // 프래그세이더 읽어오기
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+	glCompileShader(fragmentShader);
+	GLint result;
+	GLchar errorLog[512];
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &result);
+	if (!result)
+	{
+		glGetShaderInfoLog(fragmentShader, 512, NULL, errorLog);
+		std::cerr << "ERROR: frag_shader 컴파일 실패\n" << errorLog << std::endl;
+		return;
+	}
+}
+//--- 세이더 프로그램 만들고 세이더 객체 링크하기
+GLuint make_shaderProgram()
+{
+	GLint result;
+	GLchar* errorLog = NULL;
+	GLuint shaderID;
+	shaderID = glCreateProgram(); //--- 세이더 프로그램 만들기
+	glAttachShader(shaderID, vertexShader); //--- 세이더 프로그램에 버텍스 세이더 붙이기
+	glAttachShader(shaderID, fragmentShader); //--- 세이더 프로그램에 프래그먼트 세이더 붙이기
+	glLinkProgram(shaderID); //--- 세이더 프로그램 링크하기
+	glDeleteShader(vertexShader); //--- 세이더 객체를 세이더 프로그램에 링크했음으로, 세이더 객체 자체는 삭제 가능
+	glDeleteShader(fragmentShader);
+	glGetProgramiv(shaderID, GL_LINK_STATUS, &result); // ---세이더가 잘 연결되었는지 체크하기
+	if (!result) {
+		glGetProgramInfoLog(shaderID, 512, NULL, errorLog);
+		std::cerr << "ERROR: shader program 연결 실패\n" << errorLog << std::endl;
+		return false;
+	}
+	glUseProgram(shaderID); //--- 만들어진 세이더 프로그램 사용하기
+	//--- 여러 개의 세이더프로그램 만들 수 있고, 그 중 한개의 프로그램을 사용하려면
+	//--- glUseProgram 함수를 호출하여 사용 할 특정 프로그램을 지정한다.
+	//--- 사용하기 직전에 호출할 수 있다.
+	return shaderID;
+}
+//--- 출력 콜백 함수
+GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
+{
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); //--- 배경색 지정
+	glClear(GL_COLOR_BUFFER_BIT);
+	glUseProgram(shaderProgramID);
+
+	for (auto& s : shapes) {
+		glColor3f(s.r, s.g, s.b);
+		switch (s.type) {
+		case Point:	
+			glPointSize(5.0f);
+			glBegin(GL_POINTS);
+			glVertex2f(s.x, s.y);
+			glEnd();
+			break;
+		case Line:
+			glBegin(GL_LINES);
+			glVertex2f(s.x - s.size, s.y);
+			glVertex2f(s.x + s.size, s.y);
+			glEnd();
+			break;
+		case Tri:
+			glBegin(GL_TRIANGLES);
+			glVertex2f(s.x, s.y + s.size);
+			glVertex2f(s.x - s.size, s.y - s.size);
+			glVertex2f(s.x + s.size, s.y - s.size);
+			glEnd();
+			break;
+		case Rect:
+			glBegin(GL_TRIANGLES);
+			// 첫 번째 삼각형 (좌상, 좌하, 우상)
+			glVertex2f(s.x - s.size, s.y + s.size); // 좌상
+			glVertex2f(s.x - s.size, s.y - s.size); // 좌하
+			glVertex2f(s.x + s.size, s.y + s.size); // 우상
+
+			// 두 번째 삼각형 (우상, 좌하, 우하)
+			glVertex2f(s.x + s.size, s.y + s.size); // 우상
+			glVertex2f(s.x - s.size, s.y - s.size); // 좌하
+			glVertex2f(s.x + s.size, s.y - s.size); // 우하
+			glEnd();
+			break;
+		}
+	}
+
+	glutSwapBuffers(); // 화면에 출력하기
+}
+GLvoid keyboard(unsigned char key, int x, int y) {
+	switch (key) {
+	case 'p':Mode = Point; break;
+	case 'l':Mode = Line; break;
+	case 't':Mode = Tri; break;
+	case 'r':Mode = Rect; break;
+	case'c':
+		shapes.clear();
+		selected = -1;
+		break;
+	case 'w': if (selected != -1)shapes[selected].y += 0.05f; break;
+	case 's': if (selected != -1)shapes[selected].y -= 0.05f; break;
+	case 'a': if (selected != -1)shapes[selected].x -= 0.05f; break;
+	case 'd': if (selected != -1)shapes[selected].x += 0.05f; break;
+	case 'u': //좌상
+		if (selected != -1) {
+			shapes[selected].x -= 0.05f;
+			shapes[selected].y += 0.05f;
+		}
+		break;
+	case 'j': //좌하
+		if (selected != -1) {
+			shapes[selected].x -= 0.05f;
+			shapes[selected].y -= 0.05f;
+		}
+		break;
+	case 'k': //우하
+		if (selected != -1) {
+			shapes[selected].x += 0.05f;
+			shapes[selected].y -= 0.05f;
+		}
+		break;
+	case 'i': //우상
+		if (selected != -1) {
+			shapes[selected].x += 0.05f;
+			shapes[selected].y += 0.05f;
+		}
+		break;
+	}
+	glutPostRedisplay();
+}
+
+GLvoid mouse(int button, int state, int x, int y) {
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+		//화면 좌표->OpenGL 좌표 변환
+		float nx = (float)x / width * 2.0f - 1.0f;
+		float ny = 1.0f - (float)y / height * 2.0f;
+
+		selected = -1;
+		for (int i = 0; i < shapes.size(); i++) {
+			float dx = nx - shapes[i].x;
+			float dy = ny - shapes[i].y;
+			if (dx * dx + dy * dy < shapes[i].size * shapes[i].size) {
+				selected = i;
+				break;
+			}
+		}
+		if (selected == -1 && shapes.size() < 10) {
+			shapes.push_back({ Mode,nx,ny,0.1f,rgb(mtRand),rgb(mtRand) ,rgb(mtRand) });
+		}
+	}
+	glutPostRedisplay();
+}
+
+//--- 다시그리기 콜백 함수
+GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
+{
+	glViewport(0, 0, w, h);
+}

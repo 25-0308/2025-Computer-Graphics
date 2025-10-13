@@ -1,307 +1,265 @@
+#define _CRT_SECURE_NO_WARNINGS //--- 프로그램 맨 앞에 선언할 것
+#include <stdlib.h>
+#include <stdio.h>
 #include <iostream>
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-//#include <gl/glm/glm.hpp>
-//#include <gl/glm/ext.hpp>
-//#include <gl/glm/gtc/matrix_transform.hpp>
-#include <random>
 #include <vector>
 
-std::mt19937 gen(std::random_device{}());
-std::uniform_real_distribution<float> rCol(0.0f, 1.0f);
-std::uniform_real_distribution<float> rPos(-0.9f, 0.9f);
-std::uniform_real_distribution<float> rSize(0.2f, 0.4f);
-std::uniform_int_distribution<int> rCnt(5, 10);
-
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 800
-
-#define MIN_SIZE 0.05f
-
-#define NONE 0
-#define UP 1
-#define DOWN 2
-#define LEFT 3
-#define RIGHT 4
-#define UDLR 5
-
-#define DIAGONAL 6
-#define SAMEDIR 7
-#define EIGHTDIR 8
-
-
-struct RECTANGLE {
-	float x1, y1, x2, y2;
-	float r, g, b;
-	float size;
-	int dirX, dirY;
-	int moveType;
-	bool devided = false;
-	RECTANGLE(float rr, float gg, float bb)
-		: r(rr), g(gg), b(bb),
-		dirX(NONE), dirY(NONE),
-		moveType(NONE)
-	{
-		x1 = rPos(gen);
-		y1 = rPos(gen);
-		size = rSize(gen);
-		x2 = x1 + size;
-		y2 = y1 + size;
-		if (x2 > 1.0f) {
-			x2 = 1.0f;
-			x1 = x2 - size;
-		}
-		if (y2 > 1.0f) {
-			y2 = 1.0f;
-			y1 = y2 - size;
-		}
-		if (x1 < -1.0f) {
-			x1 = -1.0f;
-			x2 = x1 + size;
-		}
-		if (y1 < -1.0f) {
-			y1 = -1.0f;
-			y2 = y1 + size;
-		}
-	}
-};
-
-std::vector<RECTANGLE> Rects;
-
-GLfloat transformx(int x);
-GLfloat transformy(int y);
-GLvoid drawScene(GLvoid);
+using namespace std;
+//--- 아래 5개 함수는 사용자 정의 함수 임
+void make_vertexShaders();
+void make_fragmentShaders();
+GLuint make_shaderProgram();
+GLvoid drawScene();
 GLvoid Reshape(int w, int h);
-GLvoid KeyBoard(unsigned char key, int x, int y);
-GLvoid Mouse(int button, int state, int x, int y);
-GLvoid Timer(int value);
-void initRect();
+//추가 함수
+GLvoid keyboard(unsigned char key, int x, int y);
+GLvoid mouse(int button, int state, int x, int y);
+//--- 필요한 변수 선언
+GLint width, height;
+GLuint shaderProgramID; //--- 세이더 프로그램 이름
+GLuint vertexShader; //--- 버텍스 세이더 객체
+GLuint fragmentShader; //--- 프래그먼트 세이더 객체
+GLuint VAO;//VBO담는 용도
+GLuint VBO;//정점 데이터를 GPU에 넘겨줄 버퍼공간(포인터/암튼 주소 갖고있음) 
 
-float bgR = 1.f, bgG = 1.f, bgB = 1.f;
+enum Shapes { Point, Line, Tri, Rect };
+struct Shape {
+	Shapes type;
+	float x, y;//중심좌표
+	float size;//크기
+	float r, g, b;//색상
+};
+vector<Shape> shapes;
+int selected = -1;//도형 선택여부
+Shapes Mode = Point;//도형 종류
 
-void main(int argc, char** argv) {//--- 윈도우 출력하고 콜백함수 설정 { //--- 윈도우 생성하기
-	glutInit(&argc, argv); // glut 초기화
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); // 디스플레이 모드 설정
-	glutInitWindowPosition(300, 100); // 윈도우의 위치 지정
-	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT); // 윈도우의 크기 지정
-	glutCreateWindow("Example1"); // 윈도우 생성 (윈도우 이름)
+char* filetobuf(const char* file)
+{
+	FILE* fptr;
+	long length;
+	char* buf;
+	fptr = fopen(file, "rb"); // Open file for reading
+	if (!fptr) // Return NULL on failure
+		return NULL;
+	fseek(fptr, 0, SEEK_END); // Seek to the end of the file
+	length = ftell(fptr); // Find out how many bytes into the file we are
+	buf = (char*)malloc(length + 1); // Allocate a buffer for the entire length of the file and a null terminator
+	fseek(fptr, 0, SEEK_SET); // Go back to the beginning of the file
+	fread(buf, length, 1, fptr); // Read the contents of the file in to the buffer
+	fclose(fptr); // Close the file
+	buf[length] = 0; // Null terminator
+	return buf; // Return the buffer
+}
 
+//--- 메인 함수
+void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
+{
+	width = 500;
+	height = 500;
+	//--- 윈도우 생성하기
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowPosition(100, 100);
+	glutInitWindowSize(width, height);
+	glutCreateWindow("Example1");
 	//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;
-	if (glewInit() != GLEW_OK) // glew 초기화 
-	{
-		std::cerr << "Unable to initialize GLEW" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-	else
-		std::cout << "GLEW Initialized\n";
-
-	initRect();
-
-	glutDisplayFunc(drawScene); // 출력 함수의 지정
-	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
-	glutKeyboardFunc(KeyBoard); // 키보드 함수 지정
-	glutMouseFunc(Mouse);
-	glutTimerFunc(0, Timer, 0);
-	glutMainLoop(); // 이벤트 처리 시작
+	glewInit();
+	//--- 세이더 읽어와서 세이더 프로그램 만들기: 사용자 정의함수 호출
+	make_vertexShaders(); //--- 버텍스 세이더 만들기
+	make_fragmentShaders(); //--- 프래그먼트 세이더 만들기
+	shaderProgramID = make_shaderProgram();
+	//--- 세이더 프로그램 만들기
+	glutDisplayFunc(drawScene); //--- 출력 콜백 함수
+	glutReshapeFunc(Reshape);
+	glutKeyboardFunc(keyboard);
+	glutMouseFunc(mouse);
+	glutMainLoop();
 }
 
-GLfloat transformx(int x) {
-	return ((float)x / (WINDOW_WIDTH / 2)) - 1.0f;
-}
-
-GLfloat transformy(int y) {
-	return ((WINDOW_HEIGHT - (float)y) / (WINDOW_HEIGHT / 2)) - 1.0f;
-}
-
-GLvoid drawScene() //--- 콜백 함수: 출력 콜백 함수 
+//--- 버텍스 세이더 객체 만들기
+void make_vertexShaders()
 {
-	glClearColor(bgR, bgG, bgB, 1.0f); // 바탕색을 ‘blue’로 지정
-	glClear(GL_COLOR_BUFFER_BIT); // 설정된 색으로 전체를 칠하기
-	// 그리기 부분 구현: 그리기 관련 부분이 여기에 포함된다
-	for (auto& rect : Rects) {
-		glColor3f(rect.r, rect.g, rect.b);
-		glRectf(rect.x1, rect.y1, rect.x2, rect.y2);
+	GLchar* vertexSource;
+	//--- 버텍스 세이더 읽어 저장하고 컴파일 하기
+	//--- filetobuf: 사용자정의 함수로 텍스트를 읽어서 문자열에 저장하는 함수
+	vertexSource = filetobuf("vertex.glsl");
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexSource, NULL);
+	glCompileShader(vertexShader);
+	GLint result;
+	GLchar errorLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &result);
+	if (!result)
+	{
+
+		glGetShaderInfoLog(vertexShader, 512, NULL, errorLog);
+
+		std::cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << std::endl;
+
+		return;
 	}
+}
+//--- 프래그먼트 세이더 객체 만들기
+void make_fragmentShaders()
+{
+	GLchar* fragmentSource;
+	//--- 프래그먼트 세이더 읽어 저장하고 컴파일하기
+	fragmentSource = filetobuf("fragment.glsl"); // 프래그세이더 읽어오기
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+	glCompileShader(fragmentShader);
+	GLint result;
+	GLchar errorLog[512];
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &result);
+	if (!result)
+	{
+		glGetShaderInfoLog(fragmentShader, 512, NULL, errorLog);
+		std::cerr << "ERROR: frag_shader 컴파일 실패\n" << errorLog << std::endl;
+		return;
+	}
+}
+//--- 세이더 프로그램 만들고 세이더 객체 링크하기
+GLuint make_shaderProgram()
+{
+	GLint result;
+	GLchar* errorLog = NULL;
+	GLuint shaderID;
+	shaderID = glCreateProgram(); //--- 세이더 프로그램 만들기
+	glAttachShader(shaderID, vertexShader); //--- 세이더 프로그램에 버텍스 세이더 붙이기
+	glAttachShader(shaderID, fragmentShader); //--- 세이더 프로그램에 프래그먼트 세이더 붙이기
+	glLinkProgram(shaderID); //--- 세이더 프로그램 링크하기
+	glDeleteShader(vertexShader); //--- 세이더 객체를 세이더 프로그램에 링크했음으로, 세이더 객체 자체는 삭제 가능
+	glDeleteShader(fragmentShader);
+	glGetProgramiv(shaderID, GL_LINK_STATUS, &result); // ---세이더가 잘 연결되었는지 체크하기
+	if (!result) {
+		glGetProgramInfoLog(shaderID, 512, NULL, errorLog);
+		std::cerr << "ERROR: shader program 연결 실패\n" << errorLog << std::endl;
+		return false;
+	}
+	glUseProgram(shaderID); //--- 만들어진 세이더 프로그램 사용하기
+	//--- 여러 개의 세이더프로그램 만들 수 있고, 그 중 한개의 프로그램을 사용하려면
+	//--- glUseProgram 함수를 호출하여 사용 할 특정 프로그램을 지정한다.
+	//--- 사용하기 직전에 호출할 수 있다.
+	return shaderID;
+}
+//--- 출력 콜백 함수
+GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
+{
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); //--- 배경색 지정
+	glClear(GL_COLOR_BUFFER_BIT);
+	glUseProgram(shaderProgramID);
+
+	for (auto& s : shapes) {
+		glColor3f(s.r, s.g, s.b);
+
+		switch (s.type) {
+		case Point:
+			glPointSize(5.0f);
+			glBegin(GL_POINTS);
+			glVertex2f(s.x, s.y);
+			glEnd();
+			break;
+		case Line:
+			glBegin(GL_LINES);
+			glVertex2f(s.x - s.size, s.y);
+			glVertex2f(s.x + s.size, s.y);
+			glEnd();
+			break;
+		case Tri:
+			glBegin(GL_TRIANGLES);
+			glVertex2f(s.x, s.y + s.size);
+			glVertex2f(s.x - s.size, s.y - s.size);
+			glVertex2f(s.x + s.size, s.y - s.size);
+			glEnd();
+			break;
+		case Rect:
+			glBegin(GL_TRIANGLES);
+			// 첫 번째 삼각형 (좌상, 좌하, 우상)
+			glVertex2f(s.x - s.size, s.y + s.size); // 좌상
+			glVertex2f(s.x - s.size, s.y - s.size); // 좌하
+			glVertex2f(s.x + s.size, s.y + s.size); // 우상
+
+			// 두 번째 삼각형 (우상, 좌하, 우하)
+			glVertex2f(s.x + s.size, s.y + s.size); // 우상
+			glVertex2f(s.x - s.size, s.y - s.size); // 좌하
+			glVertex2f(s.x + s.size, s.y - s.size); // 우하
+			glEnd();
+			break;
+		}
+	}
+
 	glutSwapBuffers(); // 화면에 출력하기
 }
-
-GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수 
-{
-	glViewport(0, 0, w, h);
-}
-
-GLvoid KeyBoard(unsigned char key, int x, int y) //--- 콜백 함수: 키보드 콜백 함수 
-{
-	switch (key)
-	{
-	case 'r': {
-		initRect();
+GLvoid keyboard(unsigned char key, int x, int y) {
+	switch (key) {
+	case 'p':Mode = Point; break;
+	case 'l':Mode = Line; break;
+	case 't':Mode = Tri; break;
+	case 'r':Mode = Rect; break;
+	case'c':
+		shapes.clear();
+		selected = -1;
 		break;
-	}
-	case 'q':
-		exit(0);
+	case 'w': if (selected != -1)shapes[selected].y += 0.05f; break;
+	case 's': if (selected != -1)shapes[selected].y -= 0.05f; break;
+	case 'a': if (selected != -1)shapes[selected].x -= 0.05f; break;
+	case 'd': if (selected != -1)shapes[selected].x += 0.05f; break;
+	case 'u': //좌상
+		if (selected != -1) {
+			shapes[selected].x -= 0.05f;
+			shapes[selected].y += 0.05f;
+		}
+		break;
+	case 'j': //좌하
+		if (selected != -1) {
+			shapes[selected].x -= 0.05f;
+			shapes[selected].y -= 0.05f;
+		}
+		break;
+	case 'k': //우하
+		if (selected != -1) {
+			shapes[selected].x += 0.05f;
+			shapes[selected].y -= 0.05f;
+		}
+		break;
+	case 'i': //우상
+		if (selected != -1) {
+			shapes[selected].x += 0.05f;
+			shapes[selected].y += 0.05f;
+		}
 		break;
 	}
 	glutPostRedisplay();
 }
 
-GLvoid Mouse(int button, int state, int x, int y) {
+GLvoid mouse(int button, int state, int x, int y) {
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-		float mx = transformx(x);
-		float my = transformy(y);
+		//화면 좌표->OpenGL 좌표 변환
+		float nx = (float)x / width * 2.0f - 1.0f;
+		float ny = 1.0f - (float)y / height * 2.0f;
 
-		for (auto it = Rects.begin(); it != Rects.end(); ++it) {
-			if (mx >= it->x1 && mx <= it->x2 && my >= it->y1 && my <= it->y2 && !it->devided) {
-				int moveTypes[] = { UDLR, DIAGONAL, SAMEDIR, EIGHTDIR };
-				int type = moveTypes[rand() % 4];
-
-				float halfSize = it->size / 2.0f;
-				float thirdSize = it->size / 3.0f;
-				float x1 = it->x1;
-				float y1 = it->y1;
-				float r = it->r, g = it->g, b = it->b;
-
-				std::vector<RECTANGLE> newRects;
-				if (type == EIGHTDIR) {
-					float offsets[8][2] = {
-						{0, 0},
-						{thirdSize, 0},
-						{2 * thirdSize, 0},
-						{0, thirdSize},
-						{2 * thirdSize, thirdSize},
-						{0, 2 * thirdSize},
-						{thirdSize, 2 * thirdSize},
-						{2 * thirdSize, 2 * thirdSize}
-					};
-					int directionsX[8] = { LEFT, NONE, RIGHT, LEFT, RIGHT, LEFT, NONE, RIGHT };
-					int directionsY[8] = { DOWN, DOWN, DOWN, NONE, NONE, UP, UP, UP };
-
-					for (int i = 0; i < 8; ++i) {
-						RECTANGLE newRect(r, g, b);
-						newRect.x1 = x1 + offsets[i][0];
-						newRect.y1 = y1 + offsets[i][1];
-						newRect.size = thirdSize;
-						newRect.x2 = newRect.x1 + newRect.size;
-						newRect.y2 = newRect.y1 + newRect.size;
-						newRect.moveType = EIGHTDIR;
-						newRect.dirX = directionsX[i];
-						newRect.dirY = directionsY[i];
-						newRect.devided = true;
-						newRects.push_back(newRect);
-					}
-				}
-				else if (type == SAMEDIR) {
-					float offsets[4][2] = {
-						{0, 0},
-						{halfSize, 0},
-						{0, halfSize},
-						{halfSize, halfSize}
-					};
-					int dirChoices[8][2] = {
-						{LEFT, UP}, {NONE, UP}, {RIGHT, UP},
-						{LEFT, NONE}, {RIGHT, NONE},
-						{LEFT, DOWN}, {NONE, DOWN}, {RIGHT, DOWN}
-					};
-					int randDir = rand() % 8;
-					int dirX = dirChoices[randDir][0];
-					int dirY = dirChoices[randDir][1];
-
-					for (int i = 0; i < 4; ++i) {
-						RECTANGLE newRect(r, g, b);
-						newRect.x1 = x1 + offsets[i][0];
-						newRect.y1 = y1 + offsets[i][1];
-						newRect.size = halfSize;
-						newRect.x2 = newRect.x1 + newRect.size;
-						newRect.y2 = newRect.y1 + newRect.size;
-						newRect.moveType = SAMEDIR;
-						newRect.dirX = dirX;
-						newRect.dirY = dirY;
-						newRect.devided = true;
-						newRects.push_back(newRect);
-					}
-				}
-				else {
-					float offsets[4][2] = {
-						{0, 0},
-						{halfSize, 0},
-						{0, halfSize},
-						{halfSize, halfSize}
-					};
-					int directionsX[4], directionsY[4];
-
-					if (type == UDLR) {
-						directionsX[0] = LEFT;  directionsY[0] = NONE;
-						directionsX[1] = RIGHT; directionsY[1] = NONE;
-						directionsX[2] = NONE;  directionsY[2] = UP;
-						directionsX[3] = NONE;  directionsY[3] = DOWN;
-					}
-					else if (type == SAMEDIR) {
-
-					}
-					else {
-						directionsX[0] = LEFT;  directionsY[0] = DOWN;
-						directionsX[1] = RIGHT; directionsY[1] = DOWN;
-						directionsX[2] = LEFT;  directionsY[2] = UP;
-						directionsX[3] = RIGHT; directionsY[3] = UP;
-					}
-
-					for (int i = 0; i < 4; ++i) {
-						RECTANGLE newRect(r, g, b);
-						newRect.x1 = x1 + offsets[i][0];
-						newRect.y1 = y1 + offsets[i][1];
-						newRect.size = halfSize;
-						newRect.x2 = newRect.x1 + newRect.size;
-						newRect.y2 = newRect.y1 + newRect.size;
-						newRect.moveType = type;
-						newRect.dirX = directionsX[i];
-						newRect.dirY = directionsY[i];
-						newRect.devided = true;
-						newRects.push_back(newRect);
-					}
-				}
-
-				Rects.erase(it);
-				Rects.insert(Rects.end(), newRects.begin(), newRects.end());
+		selected = -1;
+		for (int i = 0; i < shapes.size(); i++) {
+			float dx = nx - shapes[i].x;
+			float dy = ny - shapes[i].y;
+			if (dx * dx + dy * dy < shapes[i].size * shapes[i].size) {
+				selected = i;
 				break;
 			}
 		}
-		glutPostRedisplay();
-	}
-}
-
-GLvoid Timer(int value) {
-	for (auto it = Rects.begin(); it != Rects.end();) {
-		if (it->moveType != NONE) {
-			float speed = 0.01f;
-			float minusSize = 0.005f;
-
-			if (it->dirX == LEFT)  it->x1 -= speed, it->x2 -= speed;
-			if (it->dirX == RIGHT) it->x1 += speed, it->x2 += speed;
-			if (it->dirY == UP)    it->y1 += speed, it->y2 += speed;
-			if (it->dirY == DOWN)  it->y1 -= speed, it->y2 -= speed;
-
-			it->size -= minusSize;
-			if (it->size < 0.01f) {
-				it = Rects.erase(it);
-				continue;
-			}
-			else {
-				it->x2 = it->x1 + it->size;
-				it->y2 = it->y1 + it->size;
-			}
+		if (selected == -1 && shapes.size() < 10) {
+			shapes.push_back({ Mode,nx,ny,0.1f,(float)rand() / RAND_MAX,(float)rand() / RAND_MAX,(float)rand() / RAND_MAX });
 		}
-		++it;
 	}
 	glutPostRedisplay();
-	glutTimerFunc(100, Timer, 0);
 }
 
-void initRect() {
-	if (!Rects.empty()) Rects.clear();
-	int n = rCnt(gen);
-	for (int i = 0; i < n; ++i) {
-		Rects.push_back({ rCol(gen), rCol(gen), rCol(gen) });
-	}
+//--- 다시그리기 콜백 함수
+GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
+{
+	glViewport(0, 0, w, h);
 }
