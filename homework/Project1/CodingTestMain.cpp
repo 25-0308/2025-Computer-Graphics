@@ -113,32 +113,6 @@ GLvoid keyboard(unsigned char key, int x, int y) {
 		glutPostRedisplay(); // 화면 갱신
 		std::cout << "직각 투영" << std::endl;
 		break;
-	case 'm':
-		light_Frag = !light_Frag;
-		glutPostRedisplay(); // 화면 갱신
-		break;
-	case 'n':
-		toggle_n=!toggle_n;
-		glutPostRedisplay(); // 화면 갱신
-		break;
-	case 'z':
-		if (r > 0.7f ) {
-			r -= 0.1f;
-		}
-		glutPostRedisplay(); // 화면 갱신
-		break;
-	case 'Z':
-		if (r < 4.0f) {
-			r += 0.1f;
-		}
-		glutPostRedisplay(); // 화면 갱신
-		break;
-	case 'y':
-		toggle_y = !toggle_y;
-		break;
-	case 'r':
-		toggle_r = !toggle_r;
-		break;
 	}
 }
 
@@ -193,71 +167,12 @@ const GLfloat cube_normals[36][3] = {
 	{-1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}
 };
 
-const GLfloat pyramid_vertices[18][3] = {
-	// 바닥 (두 삼각형)
-	{-0.5f, -0.5f, -0.5f}, {0.5f, -0.5f, -0.5f}, {0.5f, -0.5f, 0.5f},
-	{-0.5f, -0.5f, -0.5f}, {0.5f, -0.5f, 0.5f}, {-0.5f, -0.5f, 0.5f},
-
-	// 앞면
-	{-0.5f, -0.5f, 0.5f},  {0.5f, -0.5f, 0.5f},  {0.0f, 0.5f, 0.0f},
-
-	// 오른면
-	{0.5f, -0.5f, 0.5f},   {0.5f, -0.5f, -0.5f}, {0.0f, 0.5f, 0.0f},
-
-	// 뒷면
-	{0.5f, -0.5f, -0.5f},  {-0.5f, -0.5f, -0.5f}, {0.0f, 0.5f, 0.0f},
-
-	// 왼면
-	{-0.5f, -0.5f, -0.5f}, {-0.5f, -0.5f, 0.5f},  {0.0f, 0.5f, 0.0f}
-};
-const GLfloat pyramid_normals[18][3] = {
-	// 바닥 (두 삼각형, 모두 (0, -1, 0))
-	{0.000000f, -1.000000f, 0.000000f}, {0.000000f, -1.000000f, 0.000000f}, {0.000000f, -1.000000f, 0.000000f},
-	{0.000000f, -1.000000f, 0.000000f}, {0.000000f, -1.000000f, 0.000000f}, {0.000000f, -1.000000f, 0.000000f},
-
-	// 앞면 ((0, 0.447214, 0.894427))
-	{0.000000f, 0.447214f, 0.894427f}, {0.000000f, 0.447214f, 0.894427f}, {0.000000f, 0.447214f, 0.894427f},
-
-	// 오른면 ((0.894427, 0.447214, 0))
-	{0.894427f, 0.447214f, 0.000000f}, {0.894427f, 0.447214f, 0.000000f}, {0.894427f, 0.447214f, 0.000000f},
-
-	// 뒷면 ((0, 0.447214, -0.894427))
-	{0.000000f, 0.447214f, -0.894427f}, {0.000000f, 0.447214f, -0.894427f}, {0.000000f, 0.447214f, -0.894427f},
-
-	// 왼면 ((-0.894427, 0.447214, 0))
-	{-0.894427f, 0.447214f, 0.000000f}, {-0.894427f, 0.447214f, 0.000000f}, {-0.894427f, 0.447214f, 0.000000f}
-};
-
-const GLfloat lightcube_vertices[36][3] = {
-	// 앞면
-	{-0.2f, -0.2f,  0.2f}, { 0.2f, -0.2f,  0.2f}, { 0.2f,  0.2f,  0.2f},
-	{-0.2f, -0.2f,  0.2f}, { 0.2f,  0.2f,  0.2f}, {-0.2f,  0.2f,  0.2f},
-	// 뒷면
-	{-0.2f, -0.2f, -0.2f}, { 0.2f, -0.2f, -0.2f}, { 0.2f,  0.2f, -0.2f},
-	{-0.2f, -0.2f, -0.2f}, { 0.2f,  0.2f, -0.2f}, {-0.2f,  0.2f, -0.2f},
-	// 상면
-	{-0.2f,  0.2f, -0.2f}, { 0.2f,  0.2f, -0.2f}, { 0.2f,  0.2f,  0.2f},
-	{-0.2f,  0.2f, -0.2f}, { 0.2f,  0.2f,  0.2f}, {-0.2f,  0.2f,  0.2f},
-	// 하면
-	{-0.2f, -0.2f, -0.2f}, { 0.2f, -0.2f, -0.2f}, { 0.2f, -0.2f,  0.2f},
-	{-0.2f, -0.2f, -0.2f}, { 0.2f, -0.2f,  0.2f}, {-0.2f, -0.2f,  0.2f},
-	// 오른면
-	{ 0.2f, -0.2f, -0.2f}, { 0.2f,  0.2f, -0.2f}, { 0.2f,  0.2f,  0.2f},
-	{ 0.2f, -0.2f, -0.2f}, { 0.2f,  0.2f,  0.2f}, { 0.2f, -0.2f,  0.2f},
-	// 왼면
-	{-0.2f, -0.2f, -0.2f}, {-0.2f,  0.2f, -0.2f}, {-0.2f,  0.2f,  0.2f},
-	{-0.2f, -0.2f, -0.2f}, {-0.2f,  0.2f,  0.2f}, {-0.2f, -0.2f,  0.2f}
-};
-
-
-
 const GLfloat cube_colors[6][3] = {
 	// 상면: 녹색
 	{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
 	{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
 };
 
-GLuint ebo;
 unsigned int lightPosLocation;
 void InitBuffer()
 {
@@ -278,33 +193,6 @@ void InitBuffer()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	glGenVertexArrays(1, &vao_pyramid);
-	glBindVertexArray(vao_pyramid);
-
-	glGenBuffers(2, vbo_pyramid);
-
-	// 정점 버퍼
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_pyramid[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(pyramid_vertices), pyramid_vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
-
-	// 법선 버퍼
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_pyramid[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(pyramid_normals), pyramid_normals, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
-
-	// 조명 큐브 VAO 생성
-	glGenVertexArrays(1, &vao_lightcube);
-	glBindVertexArray(vao_lightcube);
-	glGenBuffers(1, vbo_lightcube);
-
-	// 정점 버퍼
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_lightcube[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(lightcube_vertices), lightcube_vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
 
 	glUseProgram(shaderProgramID);
 	lightPosLocation = glGetUniformLocation(shaderProgramID, "lightpos");
@@ -327,11 +215,16 @@ GLvoid drawScene() 				//--- 콜백 함수: 출력 콜백 함수
 	glUseProgram(shaderProgramID);
 	glBindVertexArray(vao);
 
+	glm::vec3 camera_eye = glm::vec3(-3.0f, 3.0f, 3.0f);
+	glm::vec3 camera_at = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
+
 	glm::mat4 view = glm::lookAt (
-		glm::vec3(-3.0f, 3.0f, 3.0f),
-		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 1.0f, 0.0f)
+		camera_eye,
+		camera_at,
+		camera_up
 	);
+
 	glm::mat4 projection;
 	if (toggle_viewport) {
 		projection = glm::perspective(
@@ -355,67 +248,9 @@ GLvoid drawScene() 				//--- 콜백 함수: 출력 콜백 함수
 	GLint locprojection = glGetUniformLocation(shaderProgramID, "projection");
 	glUniformMatrix4fv(locprojection, 1, GL_FALSE, glm::value_ptr(projection));
 
-	GLint lightOn_Frag = glGetUniformLocation(shaderProgramID, "lightOn");
-	glUniform1i(lightOn_Frag, light_Frag ? 1 : 0);
 	GLint locModel = glGetUniformLocation(shaderProgramID, "model");
-	
-
 	glm::mat4 model = glm::mat4(1.0f);
-
-	//y축 회전
-	if (toggle_y) {
-		angle += 0.2f;
-		if (angle >= 360.0f) angle -= 360.0f;
-	}
-	model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
-	
-	if (!toggle_n) {
-		glBindVertexArray(vao_pyramid);
-		glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-		glDrawArrays(GL_TRIANGLES, 0, 18);
-	}
-	else {
-		glBindVertexArray(vao);
-		glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-	}
-
-	glBindVertexArray(vao_lightcube);
-	glm::mat4 model_light = glm::mat4(1.0f);
-
-	if (toggle_r) { // 물체 공전
-		light_angle += 0.2f;
-		if (light_angle >= 360.0f) light_angle -= 360.0f;
-	}
-
-
-	float center_x = 0.0f, center_z = 0.0f;
-	float rad = glm::radians(light_angle);
-	float orbit_x = center_x + r * cos(rad);
-	float orbit_z = center_z + r * sin(rad);
-	float orbit_y = 0.0f;
-
-
-	// 조명 위치를 쉐이더에 전달
-	glUniform3f(lightPosLocation, orbit_x, orbit_y, orbit_z);
-
-
-	model_light = glm::translate(model_light, glm::vec3(orbit_x, orbit_y, orbit_z));
-	glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model_light));
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-
-	model_light = glm::mat4(1.0f);
-	glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model_light));
-
-	//궤도 그리기
-	glBegin(GL_LINE_LOOP);
-	for (int i = 0; i < 360; i++) {
-		float rad = glm::radians((float)i);
-		float x = center_x + r * cos(rad);
-		float z = center_z + r * sin(rad);
-		glVertex3f(x, 0.0f, z);
-	}
-	glEnd();
+	glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
 
 	glutPostRedisplay();
 	glutSwapBuffers(); 			
