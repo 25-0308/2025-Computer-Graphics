@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <stdlib.h>
+#include <random>
 #include <stdio.h>
 #include <vector>
 #include <gl/glew.h>				
@@ -39,6 +40,66 @@ GLuint vao, vbo[2];
 bool light_Frag = true;
 bool toggle_viewport = false;
 int x, y;
+
+class Cuboid {
+public:
+	glm::vec3 position;
+	glm::vec3 size;
+	glm::vec3 color;
+
+	Cuboid(const glm::vec3& pos, const glm::vec3& sz, const glm::vec3& color)
+		: position(pos), size(sz), color(color) {
+	}
+};
+
+class CuboidManager {
+public:
+	std::vector<Cuboid> cuboids;
+
+	CuboidManager(int x, int y) {
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<float> size_dist(0.2f, 1.0f);
+		std::uniform_real_distribution<float> color_dist(0.0f, 1.0f);
+
+		float startX = 0.0f;
+		float startZ = 0.0f;
+
+		for (int i = 0; i < x; ++i) {
+			startX = 0.0f;
+			float maxZ = 0.0f;
+			for (int j = 0; j < y; ++j) {
+				glm::vec3 sz(0.2f, size_dist(gen), 0.2f);
+				glm::vec3 pos(startX, 0.0f, startZ);
+				glm::vec3 col(color_dist(gen), color_dist(gen), color_dist(gen));
+
+				cuboids.emplace_back(pos, sz, col);
+
+				startX += sz.x; 
+			}
+			startZ += 0.4f; 
+		}
+	}
+
+	void draw(GLuint shaderProgramID, GLuint vao) {
+		for (const auto& cuboid : cuboids) {
+			glm::mat4 model = glm::translate(glm::mat4(1.0f), cuboid.position);
+			model = glm::scale(model, cuboid.size);
+			model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f)); // 밑면이 y=0에 위치하도록 조정
+
+			GLint locModel = glGetUniformLocation(shaderProgramID, "model");
+			glUniformMatrix4fv(locModel, 1, GL_FALSE, glm::value_ptr(model));
+
+			GLint objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
+			glUniform3f(objColorLocation, cuboid.color.r, cuboid.color.g, cuboid.color.b);
+
+			glBindVertexArray(vao);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+	}
+};
+
+CuboidManager* cuboidManager;
 
 char* filetobuf(const char* file)
 {
@@ -94,6 +155,8 @@ int main(int argc, char** argv)
 	
 	std::cout << "x y 좌표 입력: ";
 	std::cin >> x >> y;
+
+	cuboidManager = new CuboidManager(x, y);
 
 	glutMainLoop();				
 }
@@ -195,7 +258,7 @@ void InitBuffer()
 
 	glUseProgram(shaderProgramID);
 	lightPosLocation = glGetUniformLocation(shaderProgramID, "lightpos");
-	glUniform3f(lightPosLocation,-0.4f , 0.0f,1.6f);
+	glUniform3f(lightPosLocation,0.0f , 0.0f, 0.0f);
 	int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor");
 	glUniform3f(lightColorLocation, 1.0f, 1.0f, 1.0f);
 	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
@@ -211,7 +274,7 @@ GLvoid drawScene() 				//--- 콜백 함수: 출력 콜백 함수
 	glUseProgram(shaderProgramID);
 	glBindVertexArray(vao);
 
-	glm::vec3 camera_eye = glm::vec3(-3.0f, 3.0f, 3.0f);
+	glm::vec3 camera_eye = glm::vec3(0.0f, 3.0f, 3.0f);
 	glm::vec3 camera_at = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -224,7 +287,7 @@ GLvoid drawScene() 				//--- 콜백 함수: 출력 콜백 함수
 	glm::mat4 projection;
 	if (toggle_viewport) {
 		projection = glm::perspective(
-			glm::radians(70.0f),
+			glm::radians(60.0f),
 			1280.0f / 960.0f,
 			0.1f,
 			100.0f
@@ -238,6 +301,8 @@ GLvoid drawScene() 				//--- 콜백 함수: 출력 콜백 함수
 		);
 	}
 	
+	cuboidManager->draw(shaderProgramID, vao);
+
 	GLint locview = glGetUniformLocation(shaderProgramID, "view");
 	glUniformMatrix4fv(locview, 1, GL_FALSE, glm::value_ptr(view));
 
