@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Created by https://www.toptal.com/developers/gitignore/api/c,c++,visualstudio
 # Edit at https://www.toptal.com/developers/gitignore?templates=c,c++,visualstudio
 
@@ -73,6 +74,10 @@ dkms.conf
 *.lai
 
 # Executables
+=======
+# Created by https://www.toptal.com/developers/gitignore/api/visualstudio
+# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudio
+>>>>>>> b4adc1e28c2ef22bc29ce2b9a11879ef08a3fa36
 
 ### VisualStudio ###
 ## Ignore Visual Studio temporary files, build results, and
@@ -150,6 +155,10 @@ StyleCopReport.xml
 *_p.c
 *_h.h
 *.meta
+<<<<<<< HEAD
+=======
+*.obj
+>>>>>>> b4adc1e28c2ef22bc29ce2b9a11879ef08a3fa36
 *.iobj
 *.ipdb
 *.pgc
@@ -471,9 +480,13 @@ FodyWeavers.xsd
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
+<<<<<<< HEAD
 # End of https://www.toptal.com/developers/gitignore/api/c,c++,visualstudio
 
 *.sln
 *.vcxproj
 *.vcxproj.filters
 *.png
+=======
+# End of https://www.toptal.com/developers/gitignore/api/visualstudio
+>>>>>>> b4adc1e28c2ef22bc29ce2b9a11879ef08a3fa36
