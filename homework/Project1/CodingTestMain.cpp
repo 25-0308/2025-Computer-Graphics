@@ -35,11 +35,10 @@ GLuint vertexShader;
 GLuint fragmentShader;	
 
 GLuint vao, vbo[2];
-GLuint vao_pyramid, vbo_pyramid[2];
-GLuint vao_lightcube, vbo_lightcube[2];
 
 bool light_Frag = true;
 bool toggle_viewport = false;
+int x, y;
 
 char* filetobuf(const char* file)
 {
@@ -91,13 +90,14 @@ int main(int argc, char** argv)
 	glutKeyboardFunc(keyboard);
 	glutDisplayFunc(drawScene); 			
 	glutReshapeFunc(Reshape);		
+	
+	
+	std::cout << "x y 좌표 입력: ";
+	std::cin >> x >> y;
 
 	glutMainLoop();				
 }
-float r = 1.6f;
-bool toggle_n = false;
-bool toggle_y = false;
-bool toggle_r = false;
+
 GLvoid keyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case'q':
@@ -166,7 +166,6 @@ const GLfloat cube_normals[36][3] = {
 	{-1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f},
 	{-1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}
 };
-
 const GLfloat cube_colors[6][3] = {
 	// 상면: 녹색
 	{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
@@ -202,9 +201,6 @@ void InitBuffer()
 	int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor");
 	glUniform3f(objColorLocation, 0.0f, 1.0f, 0.0f);
 }
-
-float angle = 0.0f;
-float light_angle = 100.0f;
 
 GLvoid drawScene() 				//--- 콜백 함수: 출력 콜백 함수
 {
@@ -262,7 +258,6 @@ GLvoid Reshape(int w, int h)			//--- 콜백 함수: 다시 그리기 콜백 함�
 {
 	glViewport(0, 0, w, h);
 }
-
 
 void make_vertexShaders()
 {
